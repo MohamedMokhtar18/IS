@@ -1,7 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace IS.Models
 {
@@ -11,5 +9,6 @@ namespace IS.Models
         public string? CpeTitle { get; set; }
         public string? Cve { get; set; }
         public int CpeId { get; set; }
+        public string? Product { get; set; }
     }
 }

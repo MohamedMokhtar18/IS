@@ -32,13 +32,11 @@ namespace IS.Models
         {
             modelBuilder.Entity<Cpe23>(entity =>
             {
-                entity.HasKey(e=>e.CpeId);
+                entity.HasKey(e => e.CpeId);
 
                 entity.ToTable("CPE23");
 
-                entity.Property(e => e.CpeId)
-                    .ValueGeneratedOnAdd()
-                    .HasColumnName("CPE_Id");
+                entity.Property(e => e.CpeId).HasColumnName("CPE_Id");
 
                 entity.Property(e => e.CpeName).HasColumnName("CPE_name");
 
@@ -49,15 +47,11 @@ namespace IS.Models
 
             modelBuilder.Entity<User>(entity =>
             {
-                entity.HasKey(e=>e.UserId);
+                entity.Property(e => e.UserId).HasColumnName("user_id");
 
                 entity.Property(e => e.Password)
                     .HasMaxLength(8)
                     .HasColumnName("password");
-
-                entity.Property(e => e.UserId)
-                    .ValueGeneratedOnAdd()
-                    .HasColumnName("user_id");
 
                 entity.Property(e => e.Username)
                     .HasMaxLength(100)
