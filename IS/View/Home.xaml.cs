@@ -27,6 +27,7 @@ using ModernMessageBoxLib;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using static System.Formats.Asn1.AsnWriter;
+using IS.Model;
 
 namespace IS.View
 {
@@ -36,6 +37,7 @@ namespace IS.View
     public partial class Home : Window, INotifyPropertyChanged
     {
         static string path = AppDomain.CurrentDomain.BaseDirectory.ToString();
+        CPEVM vm = new CPEVM();
         InformationSecurityContext ISContext = new InformationSecurityContext();
         FileStream fs = File.Create($"{path}\\CPE&CVEBind.txt");
        List <double> scoreList=new List<double>();
@@ -47,6 +49,16 @@ namespace IS.View
             set
             {
                 _iCount = value;
+                OnPropertyChanged();
+            }
+        }
+        private double _Max;
+        public double max
+        {
+            get { return _Max; }
+            set
+            {
+                _Max = value;
                 OnPropertyChanged();
             }
         }
@@ -65,6 +77,7 @@ namespace IS.View
         }
         public Home()
         {
+            
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             fs.Close();
@@ -101,68 +114,73 @@ namespace IS.View
         {
             Application.Current.Shutdown();
         }
-
+        /// <summary>
+        ///  this method for create new thread to search for the CPE and cve and worte in the file
+        /// </summary>
         private async void btnLogin_Click(object sender, RoutedEventArgs e)
+        {
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += worker_DoWork;
+            //worker.ProgressChanged += worker_ProgressChanged;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            worker.RunWorkerAsync(10000000);
+            
+        }
+
+        private void worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
+        {
+            QModernMessageBox.Done($"finshed please check CPE&CVEBind.txt with score {scoreList.Max()}", "Done");
+            scoreList.Clear();
+        }
+        /// <summary>
+        ///  this method for searching for the programs in our operating system that's found in the registery file
+        ///  it searches for the name and then split it and search the parts to be find in cpe
+        /// </summary>
+        void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             FileStream fs = File.Create($"{path}\\CPE&CVEBind.txt");
             fs.Close();
             string registry_key = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
             using (RegistryKey key = Registry.LocalMachine.OpenSubKey(registry_key))
             {
-                //IndeterminateProgressWindow.GlobalBackground = Brushes.White;
-                //IndeterminateProgressWindow.GlobalForeground = Brushes.Black;
 
-
-                // Circular.Progress = i;
-                //sfCircular.SegmentCount = 1;
-                //sfCircular.Visibility = Visibility.Visible;
-                //sfCircular.ShowProgressValue = true;
-                var win = new IndeterminateProgressWindow("Please wait while we are scaning  your computer. . .");
-                win.Show();
-                //Do Some Staff
-                //Change the message the 2nd time
-
+                vm.ICount = i;
+                max = key.SubKeyCount;
                 foreach (string subkey_name in key.GetSubKeyNames())
                 {
                     using (RegistryKey subkey = key.OpenSubKey(subkey_name))
                     {
-                        win.Close();
-                        win.Visibility = Visibility.Hidden;
-                        win = new IndeterminateProgressWindow($"{i}from {key.GetSubKeyNames().Length}");
-                        //  win.Message =;
-                        //iCount = (i * 100) / key.SubKeyCount;
-                        win.Show();
                         i++;
-                        //QModernMessageBox.Show($"{i}from {key.GetSubKeyNames().Length}", "Loading", QModernMessageBox.QModernMessageBoxButtons.Ok, ModernMessageboxIcons.Info, true);
+                        iCount = i;
+
                         if (!String.IsNullOrEmpty((string?)subkey.GetValue("DisplayName")))
                         {
                             string word = "";
-                            if (subkey.GetValue("DisplayName").ToString().Split().Length > 1) { 
-                             word = subkey.GetValue("DisplayName").ToString().Split(' ')[0] + " " + subkey.GetValue("DisplayName").ToString().Split(' ')[1];
+                            if (subkey.GetValue("DisplayName").ToString().Split().Length > 1)
+                            {
+                                word = subkey.GetValue("DisplayName").ToString().Split(' ')[0] + " " + subkey.GetValue("DisplayName").ToString().Split(' ')[1];
                             }
-                            else {
+                            else
+                            {
                                 word = subkey.GetValue("DisplayName").ToString().Split(' ')[0];
-                                    }
-                          await  LoadCPE(word);
+                            }
+                             LoadCPE(word, subkey.GetValue("DisplayName").ToString());
                         }
 
                     }
-                    if (i >= key.GetSubKeyNames().Length) {
-                        // MessageBox.Show("finshed");
-                        win.Close();
-                        win.Visibility = Visibility.Hidden;
-                        win.Message = $"finshed";
-                        win.Show();
-                        win.Close();
+                    if (i >= key.GetSubKeyNames().Length)
+                    {
                         i = 0;
-                        QModernMessageBox.Done($"finshed please check CPE&CVEBind.txt with score {scoreList.Max()}", "Done");
-                        scoreList.Clear();
-                        //  fs.Close();
                     }
                 }
             }
         }
-        private async Task LoadCPE(string name)
+        /// <summary>
+        ///  this method for searching in the cpe api to be find in your computer then it go to the CVE if the CPE APi
+        ///  return 403 forbbiden then i wate for 10 secounds so the server can reset so i can search again as it is mentioned in the cpe doc
+        /// </summary>
+        private async void LoadCPE(string name,string product)
         {
 
             // make an API request 
@@ -176,27 +194,21 @@ namespace IS.View
                     //System.Threading.Thread.Sleep(6000);
 
                     client.BaseAddress = new Uri("https://services.nvd.nist.gov/rest/json/cpes/");
+                    client.DefaultRequestHeaders.Add("apiKey", $"{apiKey}");
                     var response =
                          client.GetAsync($"2.0?keywordSearch={name}&resultsPerPage=1");
-                    client.DefaultRequestHeaders.Add("apiKey", $"{apiKey}");
                   response.Wait();
                     var result = response.Result;
 
                     result.EnsureSuccessStatusCode();
                   
-
-                    // deserialize to a list 
-                    //IList<Root> ls =
-                    //    await response.Content.ReadAsAsync<IList<Root>>();
                     Root root = await result.Content.ReadAsAsync<Root>();
-                    //Console.WriteLine(root.products.FirstOrDefault().cpe.cpeName);
                     if (root.products.FirstOrDefault() != null) { 
                     string cpeName = root.products.FirstOrDefault().cpe.cpeName ?? "";
 
 
-                       // System.Threading.Thread.Sleep(6000);
 
-                        LoadCVE(name, cpeName, root);
+                         LoadCVE(name, cpeName, root, product);
                     }
 
 
@@ -206,14 +218,17 @@ namespace IS.View
                 {
                      System.Threading.Thread.Sleep(1000*10);
 
-                    //MessageBox.Show(ex.Message);
 
                 }
 
             }
 
         }
-        private async void LoadCVE(string name,string cpeName,Root rootPass)
+        /// <summary>
+        ///  this method for searching in the CVE api to be find in your computer then it write in the file and the database
+        ///  return 403 forbbiden then i wate for 10 secounds so the server can reset so i can search again as it is mentioned in the CVE doc
+        /// </summary>
+        private async void LoadCVE(string name,string cpeName,Root rootPass,string product)
         {
 
             // make an API request 
@@ -229,47 +244,47 @@ namespace IS.View
 
                     
                     client.BaseAddress = new Uri("https://services.nvd.nist.gov/rest/json/cves/2.0");
-                    var response =
-                         client.GetAsync($"?cpeName={cpeName}&resultsPerPage=1");
                         client.DefaultRequestHeaders.Add("apiKey", $"{apiKey}");
+                        var response =
+                         client.GetAsync($"?cpeName={cpeName}&resultsPerPage=1");
                         response.Wait();
                     var result = response.Result;
 
                     result.EnsureSuccessStatusCode();
 
 
-                    // deserialize to a list 
-                    //IList<Root> ls =
-                    //    await response.Content.ReadAsAsync<IList<Root>>();
+                    
                     RootCVE root = await result.Content.ReadAsAsync<RootCVE>();
-                        //Console.WriteLine(root.products.FirstOrDefault().cpe.cpeName);
                         var varn= root.vulnerabilities.FirstOrDefault();
-                        Configuration? confVar=null;
-                        Node? nodesVar = null;
+                        Description? decVar=null;
+                        string? valueVar = null;
                         CpeMatch? cpeMatchVar = null;
                         string? cveVar = "false";
-                        if (varn != null) { 
-                         confVar = varn.cve.configurations.FirstOrDefault();
+                        if (varn != null) {
+
+                            decVar = varn.cve.descriptions.FirstOrDefault();
                         }
-                        if (confVar != null) { 
-                         nodesVar = confVar.nodes.FirstOrDefault();
+                        if (decVar != null) {
+                            valueVar = decVar.value;
                         }
-                        if (nodesVar != null) {
-                           cpeMatchVar = nodesVar.cpeMatch.FirstOrDefault();
-                        }
-                        if (cpeMatchVar != null) { 
-                         cveVar = cpeMatchVar.vulnerable.ToString();
-                        }
-                        string? cveName = cveVar;
+                        //if (valueVar != null) {
+                        //   cpeMatchVar = valueVar.cpeMatch.FirstOrDefault();
+                        //}
+                        //if (cpeMatchVar != null) { 
+                        // cveVar = cpeMatchVar.vulnerable.ToString();
+                        //}
+                        string? cveName = valueVar;
 
 
 
-                    Cpe23 cpe23 = new Cpe23 { CpeName =cpeName, CpeTitle = name, Cve = cveName };
+                    Cpe23 cpe23 = new Cpe23 { CpeName =cpeName, CpeTitle = name, Cve = cveName,Product= product };
                     ISContext.Add(cpe23);
                     ISContext.SaveChanges();
                         using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
-                        { string dataCPE = JsonSerializer.Serialize(rootPass).ToString();
+                        {
+                            string dataCPE = JsonSerializer.Serialize(rootPass).ToString();
                             string dataCVE = JsonSerializer.Serialize(root).ToString();
+                            writer.Write($"the product is :{product}\n");
                             writer.Write($"{dataCPE}\n");
                             writer.Write($"\n");
                             writer.Write($"{dataCVE}\n");
@@ -286,7 +301,6 @@ namespace IS.View
                 catch (Exception ex)
                 {
                     System.Threading.Thread.Sleep(1000 * 10);
-                    //MessageBox.Show(ex.Message);
 
                 }
 

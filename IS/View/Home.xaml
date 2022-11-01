@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IS.View" xmlns:Syncfusion="http://schemas.syncfusion.com/wpf"
+        xmlns:VM="clr-namespace:IS.Model"
         mc:Ignorable="d"
         Title="Search" Height="550" Width="800"
         WindowStyle="None"
@@ -12,10 +13,10 @@
         Background="Transparent"
         AllowsTransparency="True"
         MouseDown="Window_MouseDown">
-
+   
     <Border CornerRadius="12">
         <Border.Background>
-            <ImageBrush ImageSource="C:\Users\welle\source\repos\IS\IS\Image\back-image.jpg"
+            <ImageBrush ImageSource="pack://application:,,,/Image/back-image.jpg"
                         Stretch="None"/>
         </Border.Background>
 
@@ -134,7 +135,7 @@
                             Orientation="Vertical"
                             Margin="0,35,0,0">
 
-                    <Image Source="/Image/leti.png"
+                    <Image Source="pack://application:,,,/Image/leti.png"
                            Width="100" Height="100"/>
 
                     <TextBlock Text="Scan"
@@ -185,8 +186,21 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
+                    <ProgressBar Name="progressView"
+                 Minimum="1" 
+                 Maximum="{Binding max, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Home}}}" 
+                 Value="{Binding iCount, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Home}}}" 
+                 Margin="5"  
+                 Height="24"  Foreground="#FF62FF7F"/>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}programs:{0}/{1}">
+                               <Binding Path="Value" ElementName="progressView" />
+                               <Binding Path="Maximum" ElementName="progressView" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
 
-                    
 
                 </StackPanel>
 
