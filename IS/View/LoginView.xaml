@@ -15,7 +15,7 @@
 
     <Border CornerRadius="12">
         <Border.Background>
-            <ImageBrush ImageSource="C:\Users\welle\source\repos\IS\IS\Image\back-image.jpg"
+            <ImageBrush ImageSource="pack://application:,,,/Image/back-image.jpg"
                         Stretch="None"/>
         </Border.Background>
 
@@ -134,7 +134,7 @@
                             Orientation="Vertical"
                             Margin="0,35,0,0">
 
-                    <Image Source="C:\Users\welle\source\repos\IS\IS\Image\leti.png"
+                    <Image Source="pack://application:,,,/Image/leti.png"
                            Width="100" Height="100"/>
 
                     <TextBlock Text="Scan OP"
@@ -167,7 +167,7 @@
                              Padding="20,0,0,0">
 
                         <TextBox.Background>
-                            <ImageBrush ImageSource="C:\Users\welle\source\repos\IS\IS\Image\user-icon.png"
+                            <ImageBrush ImageSource="pack://application:,,,/Image/user-icon.png"
                                         Stretch="None"
                                         AlignmentX="Left"/>
                         </TextBox.Background>
@@ -194,7 +194,7 @@
                              Padding="20,0,0,0">
 
                         <PasswordBox.Background>
-                            <ImageBrush ImageSource="C:\Users\welle\source\repos\IS\IS\Image\key-icon.png"
+                            <ImageBrush ImageSource="pack://application:,,,/Image/key-icon.png"
                                         Stretch="None"
                                         AlignmentX="Left"/>
                         </PasswordBox.Background>

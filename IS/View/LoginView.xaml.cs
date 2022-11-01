@@ -43,7 +43,10 @@ namespace IS.View
         {
             Application.Current.Shutdown();
         }
-
+        /// <summary>
+        ///  this method for searching of hte acount in the database  to match with the data input
+        ///  and if it is true then you will be sending to the home page (Scan page)
+        /// </summary>
         private void btnLogin_Click(object sender, RoutedEventArgs e)
         {
             foreach (var item in ISContext.Users)
