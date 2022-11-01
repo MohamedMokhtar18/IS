@@ -28,6 +28,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using static System.Formats.Asn1.AsnWriter;
 using IS.Model;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using System.Security.Cryptography;
 
 namespace IS.View
 {
@@ -41,6 +44,7 @@ namespace IS.View
         InformationSecurityContext ISContext = new InformationSecurityContext();
         FileStream fs = File.Create($"{path}\\CPE&CVEBind.txt");
        List <double> scoreList=new List<double>();
+        Dictionary<string,string> cweDic = new Dictionary<string,string>();
         private int i = 0;
         private double _iCount;
         public double iCount
@@ -115,7 +119,7 @@ namespace IS.View
             Application.Current.Shutdown();
         }
         /// <summary>
-        ///  this method for create new thread to search for the CPE and cve and worte in the file
+        ///  this method for create new thread to search for the CPE and cve and worte in the file with insialize threads
         /// </summary>
         private async void btnLogin_Click(object sender, RoutedEventArgs e)
         {
@@ -130,8 +134,46 @@ namespace IS.View
 
         private void worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
+            using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
+            {
+                writer.Write($"------------------------------------------------------\n");
+                writer.Write($"------------------------------------------------------\n");
+                writer.Write($"------------------------------------------------------\n");
+                writer.Write($"------------------------------------------------------\n");
+                //fs.Close();
+            }
+            foreach (var item in cweDic)
+            {
+                string WeaknessName = GetAddress(item.Value, "1000.csv");
+                if (WeaknessName == "")
+                {
+                    WeaknessName = GetAddress(item.Value, "699.csv");
+                }
+                if (WeaknessName == "")
+                {
+                    WeaknessName = GetAddress(item.Value, "1194.csv");
+                }
+                using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
+                {
+                    writer.Write($" weakness of the product{item.Key}with weakness{WeaknessName}\n");
+                    writer.Write($"------------------------------------------------------\n");
+                    //fs.Close();
+                }
+            }
+            
             QModernMessageBox.Done($"finshed please check CPE&CVEBind.txt with score {scoreList.Max()}", "Done");
             scoreList.Clear();
+        }
+        String GetAddress(String searchName, string filename)
+        {
+            var strLines = File.ReadLines($"{path}/weakness/{filename}");
+            foreach (var line in strLines)
+            {
+                if (line.Split(',')[0].Equals(searchName))
+                    return line.Split(',')[1];
+            }
+
+            return "";
         }
         /// <summary>
         ///  this method for searching for the programs in our operating system that's found in the registery file
@@ -259,10 +301,16 @@ namespace IS.View
                         Description? decVar=null;
                         string? valueVar = null;
                         CpeMatch? cpeMatchVar = null;
-                        string? cveVar = "false";
+                        string? cveVar = "";
+                        string cweKey = "";
                         if (varn != null) {
 
                             decVar = varn.cve.descriptions.FirstOrDefault();
+                            if (varn.cve.weaknesses.FirstOrDefault() != null)
+                            {
+                              cweKey = varn.cve.weaknesses.FirstOrDefault().description.FirstOrDefault().value.Split('-')[1];
+                                cweDic.Add(product,cweKey);
+                            }
                         }
                         if (decVar != null) {
                             valueVar = decVar.value;
@@ -273,11 +321,20 @@ namespace IS.View
                         //if (cpeMatchVar != null) { 
                         // cveVar = cpeMatchVar.vulnerable.ToString();
                         //}
-                        string? cveName = valueVar;
+                        string ? cveName = valueVar;
 
+                       
+                        //XDocument doc = XDocument.Load($"{path}/weakness/cwec_v4.9.xml");
+                        //XNamespace ns = "http://cwe.mitre.org/cwe-6";
+                        //var weakn = from weakness in doc.Elements("Weaknesses").SelectMany(e => e.Elements("Weakness"))
+                        //where weakness.Attribute("ID").Value == cweKey
+                        //select weakness.Parent;
+                        ////var weakn =  from weakness in doc.Root.Elements(ns + "Weakness").Descendants(ns + "Weaknesses") 
+                        ////             where weakness.Attribute("ID").Value == cweKey
+                        ////             select weakness.ToString();
+                        //var results = doc.Root.Elements(ns + "Weakness").Descendants(ns + "Weaknesses").ToList();
 
-
-                    Cpe23 cpe23 = new Cpe23 { CpeName =cpeName, CpeTitle = name, Cve = cveName,Product= product };
+                        Cpe23 cpe23 = new Cpe23 { CpeName =cpeName, CpeTitle = name, Cve = cveName,Product= product };
                     ISContext.Add(cpe23);
                     ISContext.SaveChanges();
                         using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
@@ -305,7 +362,7 @@ namespace IS.View
                 }
 
             }
-
+      
         }
     }
    
