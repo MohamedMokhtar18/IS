@@ -15,8 +15,15 @@
     <None Remove="Image\user-icon.png" />
     <None Remove="weakness\1000.csv" />
     <None Remove="weakness\1194.csv" />
+    <None Remove="weakness\2000.csv" />
     <None Remove="weakness\699.csv" />
     <None Remove="weakness\cwec_v4.9.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="weakness\2000.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

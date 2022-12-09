@@ -49,21 +49,20 @@ namespace IS.View
         /// </summary>
         private void btnLogin_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var item in ISContext.Users)
-            {
-                if (txtUser.Text.Equals(item.Username.Trim(), StringComparison.CurrentCultureIgnoreCase) && txtPass.Password.Equals(item.Password))
+                var x =ISContext.Users.Where(x => txtUser.Text.Trim().Equals(x.Username) && txtPass.Password.Equals(x.Password)).FirstOrDefault();
+                if (x!=null)
                 {
                     Home home = new Home();
                     this.Close();
                     home.Show();
                 }
-                else
-                {
+                else {
                     QModernMessageBox.Error("Username or password invalid", "Error");
+
                 }
-                
-            }
-           
+            
+            
+
         }
     }
 }
