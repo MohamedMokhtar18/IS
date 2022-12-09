@@ -155,7 +155,14 @@ namespace IS.View
                 }
                 using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
                 {
-                    writer.Write($" weakness of the product{item.Key}with weakness{WeaknessName}\n");
+                    writer.Write($" weakness of the product{item.Key}with weakness{WeaknessName} with weakness Id {item.Value} \n");
+                  //  writer.Write($"------------------------------------------------------\n");
+                    //fs.Close();
+                }
+                (string cpeacName, string cpeacDisc) = GetAddressCPAEC(item.Value, "2000.csv");
+                using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
+                {
+                    writer.Write($" cpeac of the product{item.Key}with name {cpeacName} and discription {cpeacDisc}\n");
                     writer.Write($"------------------------------------------------------\n");
                     //fs.Close();
                 }
@@ -163,6 +170,7 @@ namespace IS.View
             
             QModernMessageBox.Done($"finshed please check CPE&CVEBind.txt with score {scoreList.Max()}", "Done");
             scoreList.Clear();
+
         }
         String GetAddress(String searchName, string filename)
         {
@@ -174,6 +182,42 @@ namespace IS.View
             }
 
             return "";
+        }
+        (string, string) GetAddressCPAEC(String searchName, string filename)
+        {
+            int a;
+            int b=0;
+            var strLines = File.ReadLines($"{path}/weakness/{filename}");
+            int.TryParse(searchName, out a);
+            if (a ==0)
+            {
+                return ("","");
+            }
+            foreach (var line in strLines)
+            {
+                var arraySearch = line.Split(',');
+                foreach (var item in arraySearch[17].Split("::"))
+                {
+                    if (item.Equals(searchName,StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        return (line.Split(',')[1], line.Split(',')[4]);
+                    }
+                //    int.TryParse(item, out b);
+                //    if (b==0)
+                //    {
+                //        continue;
+                //    }
+                //    if (a == b) {
+                //        Console.WriteLine($"searchitem={a},searchitem={b}");
+                //        return line.Split(',')[4]; 
+                //    }
+
+            }
+            //if (line.Split(',')[17]. Contains(searchName))
+            //    return line.Split(',')[4];
+        }
+
+            return ("", "");
         }
         /// <summary>
         ///  this method for searching for the programs in our operating system that's found in the registery file
@@ -342,10 +386,13 @@ namespace IS.View
                             string dataCPE = JsonSerializer.Serialize(rootPass).ToString();
                             string dataCVE = JsonSerializer.Serialize(root).ToString();
                             writer.Write($"the product is :{product}\n");
-                            writer.Write($"{dataCPE}\n");
+                            writer.Write($"{rootPass.products.FirstOrDefault().cpe.cpeName}\n");
                             writer.Write($"\n");
                             writer.Write($"{dataCVE}\n");
+                            //writer.Write($"\n");
+                            //writer.Write($"{cweDic.LastOrDefault()}\n");
                             writer.Write($"------------------------------------------------------\n");
+
                             //fs.Close();
                         }
                         if (varn != null) {
