@@ -49,20 +49,28 @@ namespace IS.View
         /// </summary>
         private void btnLogin_Click(object sender, RoutedEventArgs e)
         {
-                var x =ISContext.Users.Where(x => txtUser.Text.Trim().Equals(x.Username) && txtPass.Password.Equals(x.Password)).FirstOrDefault();
-                if (x!=null)
-                {
-                    Home home = new Home();
+            var x = ISContext.Users.Where(x => txtUser.Text.Trim().Equals(x.Username) && txtPass.Password.Equals(x.Password)).FirstOrDefault();
+            if (x != null)
+            {
+                Home home = new Home();
                     this.Close();
                     home.Show();
-                }
-                else {
-                    QModernMessageBox.Error("Username or password invalid", "Error");
+            }
+            else
+            {
+                QModernMessageBox.Error("Username or password invalid", "Error");
 
-                }
-            
-            
+            }
 
+
+
+        }
+
+        private void Label_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            RegisterView registerView = new RegisterView();
+            registerView.Show();
+            this.Close();
         }
     }
 }

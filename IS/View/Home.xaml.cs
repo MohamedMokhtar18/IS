@@ -98,9 +98,9 @@ namespace IS.View
             catch (Exception)
             {
 
-               
+
             }
-           
+
 
         }
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -379,8 +379,8 @@ namespace IS.View
                         //var results = doc.Root.Elements(ns + "Weakness").Descendants(ns + "Weaknesses").ToList();
 
                         Cpe23 cpe23 = new Cpe23 { CpeName =cpeName, CpeTitle = name, Cve = cveName,Product= product };
-                    ISContext.Add(cpe23);
-                    ISContext.SaveChanges();
+                        ISContext.Add(cpe23);
+                        ISContext.SaveChanges();
                         using (var writer = File.AppendText($"{path}\\CPE&CVEBind.txt"))
                         {
                             string dataCPE = JsonSerializer.Serialize(rootPass).ToString();
